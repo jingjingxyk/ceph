@@ -110,4 +110,6 @@ function main() {
     FOR_MAKE_CHECK=1 run
 }
 
-main "$@"
+if [ "$0" = "$BASH_SOURCE" ]; then
+    main "$@"
+fi

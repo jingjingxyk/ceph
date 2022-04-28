@@ -88,11 +88,7 @@ function prepare() {
     local which_pkg="which"
     source /etc/os-release
     if test -f /etc/redhat-release ; then
-        if ! type bc > /dev/null 2>&1 ; then
-            echo "Please install bc and re-run." 
-            exit 1
-        fi
-        if test "$(echo "$VERSION_ID >= 22" | bc)" -ne 0; then
+        if [ "$VERSION_ID" -ge "22" ]; then
             install_cmd="dnf -y install"
         else
             install_cmd="yum install -y"
@@ -106,7 +102,7 @@ function prepare() {
 
     if ! type sudo > /dev/null 2>&1 ; then
         echo "Please install sudo and re-run. This script assumes it is running"
-        echo "as a normal user with the ability to run commands as root via sudo." 
+        echo "as a normal user with the ability to run commands as root via sudo."
         exit 1
     fi
     if [ -n "$install_cmd" ]; then
@@ -127,7 +123,9 @@ function prepare() {
 	    $DRY_RUN source ./install-deps.sh || return 1
         trap clean_up_after_myself EXIT
     fi
+}
 
+function configure() {
     cat <<EOM
 Note that the binaries produced by this script do not contain correct time
 and git version information, which may make them unsuitable for debugging
@@ -148,9 +146,7 @@ EOM
         ccache -p | grep max_size
     fi
     $DRY_RUN ccache -sz # Reset the ccache statistics and show the current configuration
-}
 
-function configure() {
     local cmake_build_opts=$(detect_ceph_dev_pkgs)
     in_jenkins && echo "CI_DEBUG: Running do_cmake.sh"
     $DRY_RUN ./do_cmake.sh $cmake_build_opts $@ || return 1
